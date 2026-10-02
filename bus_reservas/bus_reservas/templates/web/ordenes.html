@@ -1,0 +1,45 @@
+{% extends "web/base_portal.html" %}
+{% block title %}Mis reservas{% endblock %}
+{% block content %}
+<style>
+    .purchase-page .panel { border-radius:14px; box-shadow:none; }
+    .order-list { display:grid; gap:10px; }
+    .order-card { display:grid; grid-template-columns:1fr auto auto; align-items:center; gap:20px; padding:17px 20px; }
+    .order-card h2 { font-size:1rem; margin:0 0 3px; }
+    .order-card p { margin:0; }
+    .order-actions { display:flex; align-items:center; justify-content:flex-end; gap:12px; flex-wrap:wrap; }
+    .order-total { font-weight:750; white-space:nowrap; }
+    @media (max-width:650px) { .order-card { grid-template-columns:1fr auto; gap:12px; } .order-actions { grid-column:1 / -1; justify-content:flex-start; } }
+</style>
+<div class="purchase-page">
+<div class="page-head">
+    <div><h1>Mis reservas</h1><p class="subtitle">Consulta el estado de tus compras y tus boletos emitidos.</p></div>
+    <a class="button" href="{% url 'buscar-viajes' %}">Buscar pasajes</a>
+</div>
+{% if ordenes %}
+    <div class="order-list">
+        {% for orden in ordenes %}
+            <article class="panel order-card">
+                <div>
+                    <h2>Compra #{{ orden.id }}</h2>
+                    <p class="muted">{{ orden.fecha|date:"d/m/Y · H:i" }} · {{ orden.items.count }} pasaje{% if orden.items.count != 1 %}s{% endif %}</p>
+                </div>
+                <span class="badge">{{ orden.get_estado_display }}</span>
+                <div class="order-total">${{ orden.total|floatformat:0 }}</div>
+                <div class="order-actions">
+                    <a href="{% url 'orden-detalle-web' orden.id %}">Ver compra</a>
+                    {% if orden.estado == "PAGADO" or orden.estado == "PENDIENTE" %}
+                        <form method="post" action="{% url 'mis-pasajes-cancelar-web' orden.id %}" onsubmit="return confirm('¿Cancelar esta compra y todos sus pasajes?');">
+                            {% csrf_token %}
+                            <button class="button-danger button-small" type="submit">Cancelar compra</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty">Todavía no tienes reservas.</div>
+{% endif %}
+</div>
+{% endblock %}

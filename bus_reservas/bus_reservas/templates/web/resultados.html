@@ -1,0 +1,98 @@
+{% extends "web/base_portal.html" %}
+{% block title %}Resultados de viaje{% endblock %}
+{% block content %}
+<style>
+    .purchase-page .panel,.purchase-page .card { border-radius:14px; box-shadow:none; }
+    .search-panel { padding:20px; margin-bottom:24px; }
+    .search-grid { display:grid; grid-template-columns:repeat(4,minmax(130px,1fr)) auto; align-items:end; gap:14px; }
+    .search-grid label { margin-top:0; }
+    .trip-list { display:grid; gap:12px; }
+    .trip-card { display:grid; grid-template-columns:minmax(190px,1fr) auto auto; align-items:center; gap:24px; padding:20px 22px; }
+    .trip-card h2 { margin:8px 0 4px; font-size:1.18rem; }
+    .trip-time { color:var(--muted); font-size:.9rem; }
+    .trip-fares { display:flex; gap:20px; flex-wrap:wrap; }
+    .trip-fares span { color:var(--muted); font-size:.86rem; }
+    .trip-fares strong { display:block; color:var(--ink); font-size:1rem; }
+    .trip-meta { color:var(--muted); font-size:.86rem; }
+    .trip-bus { display:flex; align-items:center; gap:8px; margin-top:7px; color:var(--ink); font-size:.88rem; }
+    .trip-bus-mark { display:inline-flex; width:27px; height:27px; align-items:center; justify-content:center; border-radius:8px; background:#edf3fa; }
+    @media (max-width:800px) {
+        .search-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+        .trip-card { grid-template-columns:1fr auto; gap:14px; }
+        .trip-fares { grid-column:1 / -1; }
+    }
+    @media (max-width:500px) {
+        .search-grid,.trip-card { grid-template-columns:1fr; }
+        .trip-card .button { width:100%; text-align:center; }
+        .trip-fares { grid-column:auto; }
+    }
+</style>
+<div class="purchase-page">
+<div class="page-head">
+    <div>
+        <h1>Encuentra tu próximo viaje</h1>
+        <p class="subtitle">Compara horarios, disponibilidad y tarifas por tipo de asiento.</p>
+    </div>
+    <a class="button button-secondary" href="{% url 'home' %}">Volver al inicio</a>
+</div>
+<form class="panel search-panel" method="get" action="{% url 'buscar-viajes' %}">
+    <div class="search-grid">
+        <div>
+            <label for="origen">Origen</label>
+            <select id="origen" name="origen">
+                <option value="">Todas las ciudades</option>
+                {% for ciudad in ciudades %}
+                    <option value="{{ ciudad.nombre }}" {% if origen == ciudad.nombre %}selected{% endif %}>{{ ciudad.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="destino">Destino</label>
+            <select id="destino" name="destino">
+                <option value="">Todas las ciudades</option>
+                {% for ciudad in ciudades %}
+                    <option value="{{ ciudad.nombre }}" {% if destino == ciudad.nombre %}selected{% endif %}>{{ ciudad.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="fecha">Fecha de salida</label>
+            <input id="fecha" type="date" name="fecha" value="{{ fecha }}">
+        </div>
+        <div>
+            <label for="pasajeros">Pasajeros</label>
+            <select id="pasajeros" name="pasajeros">
+                {% for cantidad in "12345678" %}
+                    <option value="{{ forloop.counter }}" {% if pasajeros == forloop.counter %}selected{% endif %}>{{ forloop.counter }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit">Buscar</button>
+    </div>
+</form>
+{% if servicios %}
+    <div class="trip-list">
+        {% for servicio in servicios %}
+            <article class="panel trip-card">
+                <div>
+                    <div class="trip-time">{{ servicio.fecha_salida|date:"d/m/Y" }} · {{ servicio.hora_salida|time:"H:i" }}</div>
+                    <h2>{{ servicio.ruta.origen.ciudad.nombre }} <span aria-hidden="true">→</span> {{ servicio.ruta.destino.ciudad.nombre }}</h2>
+                    <div class="trip-meta">{{ servicio.ruta.origen.nombre }} · {{ servicio.disponibles }} asientos disponibles</div>
+                    <div class="trip-bus">
+                        <span class="trip-bus-mark" aria-hidden="true">🚌</span>
+                        <span>{{ servicio.bus.marca }} {{ servicio.bus.modelo }} · {{ servicio.bus.patente }} · {{ servicio.bus.capacidad }} asientos</span>
+                    </div>
+                </div>
+                <div class="trip-fares">
+                    <span>Semicama<strong>${{ servicio.precio_base|floatformat:0 }}</strong></span>
+                    <span>Cama<strong>${{ servicio.precio_cama|floatformat:0 }}</strong></span>
+                </div>
+                <a class="button" href="{% url 'detalle-servicio' servicio.id %}">Elegir asientos</a>
+            </article>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty">No encontramos viajes para esos criterios. Prueba otra fecha o ruta.</div>
+{% endif %}
+</div>
+{% endblock %}

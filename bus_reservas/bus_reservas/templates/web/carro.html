@@ -1,0 +1,53 @@
+{% extends "web/base_portal.html" %}
+{% block title %}Mi carro{% endblock %}
+{% block content %}
+<style>
+    .purchase-page .panel { border-radius:14px; box-shadow:none; }
+    .cart-list { display:grid; gap:10px; }
+    .cart-item { display:grid; grid-template-columns:minmax(180px,1fr) auto auto auto; align-items:center; gap:22px; padding:17px 20px; }
+    .cart-item h2 { font-size:1rem; margin:0 0 3px; }
+    .cart-item p { margin:0; }
+    .cart-fare { font-weight:750; white-space:nowrap; }
+    .cart-total { margin-top:16px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+    .cart-total .price { margin:2px 0 0; font-size:1.5rem; }
+    @media (max-width:700px) { .cart-item { grid-template-columns:1fr auto; gap:12px; } }
+    @media (max-width:420px) { .cart-item { grid-template-columns:1fr; } .cart-item form,.cart-item button { width:100%; } }
+</style>
+<div class="purchase-page">
+<div class="page-head">
+    <div>
+        <h1>Mi carro de pasajes</h1>
+        <p class="subtitle">El carro queda guardado en tu cuenta hasta confirmar la compra.</p>
+    </div>
+    <a class="button button-secondary" href="{% url 'buscar-viajes' %}">Agregar otro viaje</a>
+</div>
+{% if items %}
+    <div class="cart-list">
+        {% for item in items %}
+            <article class="panel cart-item">
+                <div>
+                    <h2>{{ item.asiento.servicio.ruta.origen.ciudad.nombre }} → {{ item.asiento.servicio.ruta.destino.ciudad.nombre }}</h2>
+                    <p class="muted">{{ item.asiento.servicio.fecha_salida|date:"d/m/Y" }} · {{ item.asiento.servicio.hora_salida|time:"H:i" }}</p>
+                </div>
+                <div><span class="muted">Asiento</span><br>{{ item.asiento.numero }} · {{ item.asiento.get_tipo_display }}</div>
+                <div><span class="muted">Comprador</span><br>{{ item.nombre_pasajero|default:"Sin dato" }}<br><span class="muted">{{ item.documento_pasajero|default:"Sin documento" }}</span></div>
+                <div class="cart-fare">${{ item.subtotal|floatformat:0 }}</div>
+                <form method="post" action="{% url 'carro-quitar-web' item.id %}">
+                    {% csrf_token %}
+                    <button class="button-danger button-small" type="submit">Quitar</button>
+                </form>
+            </article>
+        {% endfor %}
+    </div>
+    <div class="panel cart-total">
+        <div><span class="muted">Total a pagar</span><div class="price">${{ carro.total_precio|floatformat:0 }}</div></div>
+        <form method="post" action="{% url 'carro-confirmar-web' %}">
+            {% csrf_token %}
+            <button type="submit">Confirmar reserva</button>
+        </form>
+    </div>
+{% else %}
+    <div class="empty">Tu carro está vacío. Busca un viaje y selecciona los asientos que necesitas.</div>
+{% endif %}
+</div>
+{% endblock %}

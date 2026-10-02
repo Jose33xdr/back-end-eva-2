@@ -1,0 +1,21 @@
+{% extends "web/base_portal.html" %}
+{% block title %}Iniciar sesión{% endblock %}
+{% block content %}
+<div style="max-width:520px;margin:20px auto">
+    <div class="panel">
+        <h1>Bienvenido de nuevo</h1>
+        <p class="subtitle">Accede para gestionar tus reservas o administrar la flota.</p>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+            <label for="username">Usuario</label>
+            <input id="username" name="username" autocomplete="username" required autofocus>
+            <label for="password">Contraseña</label>
+            <input id="password" type="password" name="password" autocomplete="current-password" required>
+            <div style="height:18px"></div>
+            <button type="submit">Iniciar sesión</button>
+        </form>
+        <p class="muted" style="margin-bottom:0">¿Aún no tienes cuenta? <a href="{% url 'registro-web' %}">Regístrate aquí</a>.</p>
+    </div>
+</div>
+{% endblock %}

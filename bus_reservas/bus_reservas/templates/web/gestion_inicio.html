@@ -1,0 +1,27 @@
+{% extends "web/base_portal.html" %}
+{% block title %}Panel de flota{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div><h1>Panel de administrador</h1><p class="subtitle">Crea ciudades, terminales, rutas, buses y viajes. Cada registro estará disponible en los formularios relacionados.</p></div>
+    <span class="badge">Administrador</span>
+</div>
+<div class="cards">
+    {% for recurso, etiqueta, total, descripcion in recursos %}
+        <section class="card">
+            <h2>{{ etiqueta }}</h2>
+            <p class="price">{{ total }}</p>
+            <p class="muted">{{ descripcion }}</p>
+            <div class="actions">
+                <a class="button button-secondary button-small" href="{% url 'gestion-lista' recurso %}">Ver y editar</a>
+                <a class="button button-small" href="{% url 'gestion-nuevo' recurso %}">Agregar</a>
+            </div>
+        </section>
+    {% endfor %}
+    <section class="card">
+        <h2>Ventas</h2>
+        <p class="price">{{ ordenes_total }}</p>
+        <p class="muted">{{ pendientes_total }} pendientes de confirmación</p>
+        <a class="button button-secondary button-small" href="{% url 'gestion-ordenes' %}">Ver ventas</a>
+    </section>
+</div>
+{% endblock %}

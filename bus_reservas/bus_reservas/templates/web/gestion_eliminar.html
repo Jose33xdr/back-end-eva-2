@@ -1,0 +1,18 @@
+{% extends "web/base_portal.html" %}
+{% block title %}Eliminar registro{% endblock %}
+{% block content %}
+<div style="max-width:640px;margin:30px auto">
+    <div class="panel">
+        <h1>¿Eliminar este registro?</h1>
+        <p>Vas a eliminar <strong>{{ objeto }}</strong> de {{ etiqueta|lower }}.</p>
+        <p class="muted">Si otros registros dependen de este, también podrían verse afectados.</p>
+        <div class="actions">
+            <form method="post">
+                {% csrf_token %}
+                <button class="button-danger" type="submit">Confirmar eliminación</button>
+            </form>
+            <a class="button button-secondary" href="{% url 'gestion-lista' recurso %}">Cancelar</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}BusGo{% endblock %} | BusGo</title>
+    <style>
+        :root {
+            --navy: #10213d;
+            --blue: #1769d2;
+            --blue-dark: #1056b3;
+            --orange: #ffb34d;
+            --ink: #1b2b43;
+            --muted: #687991;
+            --line: #e1e8f1;
+            --paper: #ffffff;
+            --background: #f3f6fb;
+            --green: #14845f;
+            --shadow: 0 12px 34px rgba(16, 33, 61, .07);
+        }
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            color: var(--ink);
+            font-family: "Segoe UI", Arial, sans-serif;
+            background:
+                radial-gradient(ellipse at 12% 0%, rgba(23,105,210,.07), transparent 34rem),
+                var(--background);
+            line-height: 1.55;
+        }
+        a { color: var(--blue); text-decoration: none; }
+        a:hover { color: var(--blue-dark); text-decoration: none; }
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            color: white;
+            background: rgba(13, 29, 54, .97);
+            border-bottom: 1px solid rgba(255,255,255,.09);
+            box-shadow: 0 8px 26px rgba(10, 27, 51, .13);
+            backdrop-filter: blur(14px);
+        }
+        .topbar-inner, .page {
+            width: min(1180px, calc(100% - 44px));
+            margin: 0 auto;
+        }
+        .topbar-inner {
+            min-height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+        .brand {
+            color: white;
+            font-weight: 850;
+            font-size: 1.35rem;
+            letter-spacing: -.035em;
+            white-space: nowrap;
+        }
+        .brand:hover { color:white; }
+        .brand-mark { margin-right: 9px; color: var(--orange); }
+        .nav { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+        .nav a {
+            color: #e5edf9;
+            font-size: .92rem;
+            font-weight: 650;
+            padding: 9px 12px;
+            border-radius: 9px;
+            transition: background .18s ease, color .18s ease;
+        }
+        .nav a:hover { color:white; background:rgba(255,255,255,.09); }
+        .nav a.button { color: #fff; padding: 9px 15px; }
+        .nav a.button-secondary { color: #eaf2fc; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); }
+        .nav form { margin: 0; }
+        .nav > span { color:#c7d3e5; font-size:.9rem; padding:0 5px; }
+        .nav button.button-secondary { color:#eaf2fc; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); }
+        .page { min-height: calc(100vh - 76px); padding: 42px 0 72px; }
+        .page-head { display:flex; justify-content:space-between; align-items:end; gap:24px; margin-bottom:28px; }
+        h1, h2, h3 { color: var(--navy); letter-spacing:-.025em; }
+        h1 { margin:0; font-size:clamp(2rem, 3.8vw, 2.8rem); line-height:1.12; }
+        h2 { margin-top:0; font-size:1.28rem; }
+        h3 { font-size:1.05rem; }
+        .subtitle { color:var(--muted); margin:10px 0 0; font-size:1.02rem; max-width:680px; }
+        .panel, .card {
+            background:var(--paper);
+            border:1px solid var(--line);
+            border-radius:18px;
+            padding:26px;
+            box-shadow:var(--shadow);
+        }
+        .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:20px; }
+        .cards { display:grid; grid-template-columns:repeat(auto-fit, minmax(275px, 1fr)); gap:20px; align-items:stretch; }
+        .card { transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+        .card:hover { transform:translateY(-3px); border-color:#cbd9ec; box-shadow:0 18px 42px rgba(16,33,61,.11); }
+        .card h2, .card h3 { margin-top:0; }
+        .muted { color:var(--muted); }
+        .button, button {
+            display:inline-block;
+            border:0;
+            border-radius:11px;
+            background:linear-gradient(135deg, var(--blue), var(--blue-dark));
+            color:white;
+            padding:12px 18px;
+            font:inherit;
+            font-weight:700;
+            cursor:pointer;
+            box-shadow:0 5px 12px rgba(23,105,210,.15);
+            transition:transform .16s ease, box-shadow .16s ease, filter .16s ease;
+        }
+        .button:hover, button:hover { color:white; transform:translateY(-1px); box-shadow:0 8px 18px rgba(23,105,210,.23); }
+        .button-secondary { background:#edf3fa; color:var(--navy); box-shadow:none; }
+        .button-secondary:hover { background:#e2ebf6; color:var(--navy); box-shadow:none; }
+        .button-danger { background:linear-gradient(135deg,#c73b4a,#a91f32); }
+        .button-small { padding:9px 13px; font-size:.88rem; }
+        .actions { display:flex; gap:11px; align-items:center; flex-wrap:wrap; }
+        .actions form { display:inline; margin:0; }
+        label { display:block; color:#263a56; font-weight:700; margin:15px 0 7px; font-size:.93rem; }
+        input, select, textarea {
+            width:100%;
+            padding:12px 14px;
+            border:1px solid #cbd6e4;
+            border-radius:10px;
+            font:inherit;
+            background:#fff;
+            color:var(--ink);
+            transition:border-color .15s ease, box-shadow .15s ease;
+        }
+        input:focus, select:focus, textarea:focus, button:focus-visible, a:focus-visible {
+            outline:3px solid rgba(23,105,210,.18);
+            outline-offset:2px;
+            border-color:var(--blue);
+        }
+        input::placeholder { color:#97a4b5; }
+        form p { margin:0 0 15px; }
+        form p label { margin-top:0; }
+        .helptext { display:block; color:var(--muted); font-size:.86rem; margin-top:5px; }
+        .errorlist { color:#a51d2d; margin:6px 0; padding-left:20px; font-size:.9rem; }
+        .messages { list-style:none; padding:0; margin:0 0 22px; }
+        .messages li { padding:14px 17px; border:1px solid #cfe2fb; border-radius:12px; margin-bottom:9px; background:#edf5ff; color:#174b86; }
+        .messages .error { border-color:#f0c7cb; background:#fff1f2; color:#a51d2d; }
+        .messages .success { border-color:#bee5d2; background:#edfaf3; color:#146c43; }
+        .messages .warning { border-color:#f2deb1; background:#fff8e8; color:#79551a; }
+        .table-wrap { overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; background:white; }
+        th, td { text-align:left; padding:15px 14px; border-bottom:1px solid var(--line); vertical-align:middle; }
+        th { color:#64758d; background:#f7f9fc; font-size:.78rem; text-transform:uppercase; letter-spacing:.065em; white-space:nowrap; }
+        tbody tr:hover { background:#f8fbff; }
+        tbody tr:last-child td { border-bottom:0; }
+        .badge { display:inline-block; padding:6px 10px; border-radius:999px; background:#eaf2fc; color:#1558a8; font-size:.8rem; font-weight:750; }
+        .price { font-size:1.65rem; color:var(--navy); font-weight:850; letter-spacing:-.03em; }
+        .empty { padding:38px 24px; text-align:center; background:white; border:1px dashed #b9c8da; border-radius:16px; color:var(--muted); }
+        ::selection { background:#cfe2ff; color:#10213d; }
+        @media (max-width:650px) {
+            .topbar { position:relative; }
+            .topbar-inner { align-items:flex-start; flex-direction:column; padding:15px 0; gap:12px; }
+            .nav { justify-content:flex-start; gap:5px; width:100%; }
+            .nav a { padding:8px 10px; }
+            .nav > span { width:100%; padding:4px 10px; }
+            .page { width:min(100% - 28px, 1180px); padding:28px 0 48px; }
+            .page-head { display:flex; flex-direction:column; align-items:flex-start; gap:16px; margin-bottom:21px; }
+            .panel, .card { padding:19px; border-radius:15px; }
+            .cards { grid-template-columns:1fr; gap:14px; }
+            .grid { gap:14px; }
+            .actions { width:100%; }
+            .actions > .button, .actions form, .actions form button { flex:1; }
+            th, td { padding:12px 10px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a class="brand" href="{% url 'home' %}"><span class="brand-mark">🚌</span>BusGo</a>
+            <nav class="nav" aria-label="Navegación principal">
+                {% if request.user.is_authenticated %}
+                    {% if request.user.is_admin %}
+                        <a href="{% url 'gestion-inicio' %}">Panel de administrador</a>
+                    {% else %}
+                        <a href="{% url 'buscar-viajes' %}">Buscar viajes</a>
+                        <a href="{% url 'carro-web' %}">Mi carro</a>
+                        <a href="{% url 'mis-reservas-web' %}">Mis reservas</a>
+                    {% endif %}
+                    <span>Hola, {{ request.user.first_name|default:request.user.username }}</span>
+                    <form method="post" action="{% url 'logout-web' %}">
+                        {% csrf_token %}
+                        <button class="button-secondary button-small" type="submit">Cerrar sesión</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'buscar-viajes' %}">Buscar viajes</a>
+                    <a href="{% url 'login-web' %}">Iniciar sesión</a>
+                    <a class="button button-small" href="{% url 'registro-web' %}">Crear cuenta</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+    <main class="page">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

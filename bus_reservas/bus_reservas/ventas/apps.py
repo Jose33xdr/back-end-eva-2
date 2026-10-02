@@ -1,0 +1,11 @@
+"""
+Configuración de la aplicación VENTAS.
+"""
+
+from django.apps import AppConfig
+
+
+class VentasConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'ventas'
+    verbose_name = 'Gestión de Ventas y Órdenes'

@@ -1,0 +1,47 @@
+{% extends "web/base_portal.html" %}
+{% block title %}Ventas{% endblock %}
+{% block content %}
+<style>
+    .sales-page .panel { border-radius:14px; box-shadow:none; }
+    .sales-list { display:grid; gap:10px; }
+    .sale-card { display:grid; grid-template-columns:1fr auto auto auto; align-items:center; gap:20px; padding:17px 20px; }
+    .sale-card h2 { margin:0 0 3px; font-size:1rem; }
+    .sale-card p { margin:0; }
+    .sale-actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    @media (max-width:700px) { .sale-card { grid-template-columns:1fr auto; gap:12px; } .sale-actions { grid-column:1 / -1; } }
+    @media (max-width:430px) { .sale-card { grid-template-columns:1fr; } }
+</style>
+<div class="sales-page">
+<div class="page-head">
+    <div><h1>Ventas y reservas</h1><p class="subtitle">Confirma pagos, cancela órdenes y registra la entrega de boletos.</p></div>
+    <a class="button button-secondary" href="{% url 'gestion-inicio' %}">Volver al panel</a>
+</div>
+{% if ordenes %}
+    <div class="sales-list">
+        {% for orden in ordenes %}
+            <article class="panel sale-card">
+                <div>
+                    <h2>Compra #{{ orden.id }} · {{ orden.items.first.nombre_pasajero|default:orden.usuario.get_full_name|default:orden.usuario.username }}</h2>
+                    {% if orden.items.first.documento_pasajero %}<p class="muted">{{ orden.items.first.documento_pasajero }}</p>{% endif %}
+                    <p class="muted">{{ orden.fecha|date:"d/m/Y H:i" }}</p>
+                </div>
+                <span class="badge">{{ orden.get_estado_display }}</span>
+                <strong>${{ orden.total|floatformat:0 }}</strong>
+                <div class="sale-actions">
+                    <a href="{% url 'orden-detalle-web' orden.id %}">Gestionar</a>
+                    {% if orden.estado == "PAGADO" or orden.estado == "PENDIENTE" %}
+                        <form method="post" action="{% url 'gestion-orden-cambiar-estado' orden.id %}" onsubmit="return confirm('¿Cancelar todos los pasajes de la orden #{{ orden.id }}? Los asientos volverán a quedar disponibles.');">
+                            {% csrf_token %}
+                            <input type="hidden" name="estado" value="CANCELADO">
+                            <button class="button-danger button-small" type="submit">Cancelar</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty">Todavía no hay ventas.</div>
+{% endif %}
+</div>
+{% endblock %}

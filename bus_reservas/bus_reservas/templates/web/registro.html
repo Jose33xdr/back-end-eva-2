@@ -1,0 +1,16 @@
+{% extends "web/base_portal.html" %}
+{% block title %}Crear cuenta{% endblock %}
+{% block content %}
+<div style="max-width:620px;margin:20px auto">
+    <div class="panel">
+        <h1>Crea tu cuenta de pasajero</h1>
+        <p class="subtitle">Completa tus datos para buscar viajes y guardar tus reservas.</p>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Crear cuenta</button>
+        </form>
+        <p class="muted">¿Ya tienes cuenta? <a href="{% url 'login-web' %}">Inicia sesión</a>.</p>
+    </div>
+</div>
+{% endblock %}

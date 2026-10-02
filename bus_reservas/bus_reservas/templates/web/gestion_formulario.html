@@ -1,0 +1,27 @@
+{% extends "web/base_portal.html" %}
+{% block title %}{% if objeto %}Editar{% else %}Crear{% endif %} {{ etiqueta|lower }}{% endblock %}
+{% block content %}
+<div style="max-width:760px;margin:0 auto">
+    <div class="panel">
+        <div class="page-head">
+            <div>
+                <h1>{% if objeto %}Editar{% else %}Crear{% endif %} registro</h1>
+                <p class="subtitle">{{ etiqueta }} · Los servicios nuevos reciben asientos automáticamente según la configuración del bus.</p>
+            </div>
+            <a class="button button-secondary" href="{% url 'gestion-lista' recurso %}">Volver</a>
+        </div>
+        {% if recurso == "terminales" %}
+            <p class="muted">Selecciona una ciudad existente. Si falta, <a href="{% url 'gestion-nuevo' 'ciudades' %}">agrega la ciudad primero</a>; aparecerá aquí al volver.</p>
+        {% elif recurso == "rutas" %}
+            <p class="muted">Elige terminales para origen y destino. Si falta alguna, <a href="{% url 'gestion-nuevo' 'terminales' %}">crea el terminal primero</a>; luego aparecerá en ambas listas.</p>
+        {% elif recurso == "servicios" %}
+            <p class="muted">Puedes actualizar aquí las tarifas semicama y cama. El cambio aplica a las próximas compras; los pasajes ya comprados conservan su precio. Los viajes publican una ruta en el buscador. <a href="{% url 'gestion-nuevo' 'rutas' %}">Agrega una ruta</a> o un <a href="{% url 'gestion-nuevo' 'buses' %}">bus</a> primero si no aparecen en las opciones.</p>
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Guardar</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

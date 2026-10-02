@@ -1,0 +1,209 @@
+{% extends "web/base_portal.html" %}
+{% block title %}Seleccionar asiento{% endblock %}
+{% block content %}
+<style>
+    .purchase-page .panel { border-radius:14px; box-shadow:none; }
+    .purchase-page .page-head { margin-bottom:22px; }
+    .bus-layout { max-width:680px; margin:20px auto; padding:18px; border:1px solid #dce4ee; border-radius:22px; background:linear-gradient(180deg,#f8fafc,#fff); box-shadow:0 8px 24px rgba(18,36,59,.07); }
+    .bus-front { display:flex; align-items:center; justify-content:flex-start; gap:10px; padding:0 0 14px; color:var(--muted); font-size:.82rem; }
+    .bus-front::before { content:""; width:30px; height:30px; border:2px solid #a9b7c7; border-radius:50% 50% 8px 8px; background:#eef3f8; }
+    .seat-rows { display:grid; gap:9px; }
+    .seat-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)) 28px repeat(2,minmax(0,1fr)); gap:8px; align-items:stretch; }
+    .seat-slot-1 { grid-column:1; }
+    .seat-slot-2 { grid-column:2; }
+    .seat-slot-3 { grid-column:4; }
+    .seat-slot-4 { grid-column:5; }
+    .seat-aisle { grid-column:3; grid-row:1; min-height:62px; border-left:1px dashed #cbd5e1; border-right:1px dashed #cbd5e1; background:rgba(226,232,240,.3); }
+    .seat-option { display:block; cursor:pointer; }
+    .seat-option input { position:absolute; opacity:0; width:1px; height:1px; }
+    .seat-tile,.seat-unavailable { display:flex; min-height:62px; flex-direction:column; align-items:center; justify-content:center; gap:3px; border:2px solid #24a878; border-radius:10px; background:#eaf8f1; color:#146c43; transition:transform .15s, box-shadow .15s, background .15s; }
+    .seat-option:hover .seat-tile { transform:translateY(-2px); box-shadow:0 5px 14px rgba(18,36,59,.12); }
+    .seat-option input:checked + .seat-tile { border-color:#e99a30; background:#fff0d7; color:#87510e; box-shadow:0 0 0 3px rgba(233,154,48,.2); }
+    .seat-option input:focus-visible + .seat-tile { outline:3px solid #1878e8; outline-offset:3px; }
+    .seat-tile strong,.seat-unavailable strong { font-size:1rem; }
+    .seat-tile small,.seat-unavailable small { font-size:.68rem; }
+    .seat-unavailable { border-color:#c84450; background:#fff0f0; color:#a51d2d; }
+    .seat-legend { display:flex; justify-content:center; flex-wrap:wrap; gap:12px; margin:14px 0 22px; }
+    .seat-legend span { display:inline-flex; align-items:center; gap:7px; color:var(--muted); font-size:.9rem; }
+    .passenger-fields { display:grid; gap:14px; margin:14px 0; }
+    .passenger-fields fieldset { border:1px solid #dce4ee; border-radius:12px; padding:14px; }
+    .passenger-fields legend { padding:0 6px; font-weight:700; }
+    .seat-dot { width:13px; height:13px; border-radius:4px; background:#eaf8f1; border:2px solid #24a878; }
+    .seat-dot.selected { background:#fff0d7; border-color:#e99a30; }
+    .seat-dot.occupied { background:#fff0f0; border-color:#c84450; }
+    .rut-feedback { display:block; min-height:1.3em; margin-top:5px; }
+    .rut-feedback[data-state="valid"] { color:#146c43; }
+    .rut-feedback[data-state="invalid"] { color:#a51d2d; }
+    .purchase-summary-card { position:sticky; top:96px; align-self:start; }
+    @media (max-width:520px) { .bus-layout { padding:12px 8px; } .seat-row { grid-template-columns:repeat(2,minmax(0,1fr)) 16px repeat(2,minmax(0,1fr)); gap:5px; } .seat-tile,.seat-unavailable,.seat-aisle { min-height:54px; } .seat-tile small,.seat-unavailable small { font-size:.58rem; } }
+</style>
+<div class="page-head">
+    <div>
+        <h1>{{ servicio.ruta.origen.ciudad.nombre }} → {{ servicio.ruta.destino.ciudad.nombre }}</h1>
+        <p class="subtitle">{{ servicio.fecha_salida|date:"l d F Y" }} · Salida {{ servicio.hora_salida|time:"H:i" }}</p>
+    </div>
+    <a class="button button-secondary" href="{% url 'buscar-viajes' %}">Volver a resultados</a>
+</div>
+<div class="purchase-page">
+<div class="grid">
+    <section class="panel">
+        {% if request.user.is_authenticated and not request.user.is_admin %}
+            <form method="post">
+                {% csrf_token %}
+                <h2>1. Selecciona tus asientos</h2>
+                <p class="muted">Selecciona uno o más asientos. Puedes agregar hasta {{ limite_compra }} pasajes en esta compra.</p>
+                <div class="seat-legend" aria-label="Leyenda de asientos">
+                    <span><i class="seat-dot"></i> Disponible</span>
+                    <span><i class="seat-dot selected"></i> Seleccionado</span>
+                    <span><i class="seat-dot occupied"></i> Reservado</span>
+                </div>
+                <div class="bus-layout" aria-label="Plano de asientos del bus">
+                    <div class="bus-front">Frente del bus · Conductor</div>
+                    <div class="seat-rows">
+                    {% for row in seat_rows %}
+                        <div class="seat-row" aria-label="Fila {{ forloop.counter }}">
+                        {% for slot in row %}
+                            {% with asiento=slot.asiento %}
+                                {% if asiento.ocupado %}
+                                    <div class="seat-unavailable seat-slot-{{ slot.position }}" aria-label="Asiento {{ asiento.numero }}, reservado" title="Asiento reservado">
+                                        <strong>{{ asiento.numero }}</strong>
+                                        <small>Reservado</small>
+                                    </div>
+                                {% else %}
+                                    <label class="seat-option seat-slot-{{ slot.position }}">
+                                        <input
+                                            type="checkbox"
+                                            name="asientos_ids"
+                                            value="{{ asiento.id }}"
+                                            aria-label="Asiento {{ asiento.numero }}, {{ asiento.get_tipo_display }}, ${{ asiento.precio|floatformat:0 }}"
+                                            data-seat-checkbox
+                                            {% if asiento.id|stringformat:"s" in asientos_seleccionados %}checked{% endif %}
+                                        >
+                                        <span class="seat-tile">
+                                            <strong>{{ asiento.numero }}</strong>
+                                            <small>{{ asiento.get_tipo_display }} · ${{ asiento.precio|floatformat:0 }}</small>
+                                        </span>
+                                    </label>
+                                {% endif %}
+                            {% endwith %}
+                            {% if slot.position == 2 %}<div class="seat-aisle" aria-hidden="true"></div>{% endif %}
+                        {% endfor %}
+                        </div>
+                    {% empty %}
+                        <p class="empty">Este servicio todavía no tiene asientos asignados.</p>
+                    {% endfor %}
+                    </div>
+                </div>
+                <p class="muted" aria-live="polite"><span data-selected-count>0</span> asientos seleccionados.</p>
+                <h2>2. Datos de compra</h2>
+                <label for="nombre_comprador">Nombre completo de quien compra</label>
+                <input id="nombre_comprador" name="nombre_comprador" maxlength="200" value="{{ nombre_comprador }}" autocomplete="name" required>
+                <label for="documento_pasajero">RUT o pasaporte de quien compra</label>
+                <input id="documento_pasajero" name="documento_pasajero" maxlength="32" value="{{ documento_comprador }}" placeholder="11.111.111-1 o número de pasaporte" autocomplete="off" data-rut-input data-purchaser-document required>
+                <small class="helptext">Ingresa este documento una sola vez, aunque compres varios pasajes.</small>
+                <small class="rut-feedback" data-rut-feedback aria-live="polite">El RUT se valida con su dígito verificador; también puedes ingresar un pasaporte.</small>
+                <small class="helptext">El nombre y el documento se guardarán como datos del comprador para todos los pasajes. El RUT se valida automáticamente.</small>
+                <div style="height:16px"></div>
+                {% if limite_compra %}
+                    <button type="submit">Añadir pasajes seleccionados al carro</button>
+                {% else %}
+                    <p class="muted">No quedan asientos disponibles en este viaje.</p>
+                {% endif %}
+            </form>
+        {% elif request.user.is_authenticated %}
+            <h2>Seleccionar asiento</h2>
+            <p>La cuenta administradora no puede comprar pasajes.</p>
+        {% else %}
+            <h2>Seleccionar asiento</h2>
+            <p>Inicia sesión como pasajero para seleccionar un asiento disponible y continuar con la compra.</p>
+            <a class="button" href="{% url 'login-web' %}?next={{ request.path|urlencode }}">Iniciar sesión para elegir asiento</a>
+        {% endif %}
+    </section>
+    <aside class="panel purchase-summary-card">
+        <h2>Detalle del servicio</h2>
+        <p><strong>Origen:</strong> {{ servicio.ruta.origen.nombre }} — {{ servicio.ruta.origen.ciudad.nombre }}</p>
+        <p><strong>Destino:</strong> {{ servicio.ruta.destino.nombre }} — {{ servicio.ruta.destino.ciudad.nombre }}</p>
+        <p><strong>Bus:</strong> {{ servicio.bus.marca }} {{ servicio.bus.modelo }} ({{ servicio.bus.patente }})</p>
+        <p><strong>Semicama:</strong> ${{ servicio.precio_base|floatformat:0 }}</p>
+        <p><strong>Cama:</strong> ${{ servicio.precio_cama|floatformat:0 }}</p>
+        <p><strong>Asientos libres:</strong> {{ limite_compra }}</p>
+    </aside>
+</div>
+</div>
+<script>
+    (() => {
+        const form = document.querySelector(".panel form");
+        const purchaserDocument = document.querySelector("[data-purchaser-document]");
+        const rutFeedback = document.querySelector("[data-rut-feedback]");
+        const checkboxes = [...document.querySelectorAll("[data-seat-checkbox]")];
+        const count = document.querySelector("[data-selected-count]");
+        const maxSeats = {{ limite_compra }};
+
+        function pareceRut(value, normalized) {
+            return /^\d{1,8}[0-9K]$/.test(normalized)
+                && (/[.-]/.test(value) || /^\d{7,9}$/.test(normalized) || normalized.endsWith("K"));
+        }
+
+        function rutValido(value) {
+            const normalized = value.replace(/[\s.-]/g, "").toUpperCase();
+            if (!pareceRut(value, normalized)) return true;
+            const body = normalized.slice(0, -1);
+            const verifier = normalized.slice(-1);
+            const sum = [...body].reverse().reduce(
+                (total, digit, index) => total + Number(digit) * (index % 6 + 2), 0
+            );
+            const remainder = 11 - (sum % 11);
+            const expected = remainder === 11 ? "0" : remainder === 10 ? "K" : String(remainder);
+            return verifier === expected;
+        }
+
+        function attachRutValidation(input) {
+            input.addEventListener("input", () => {
+                const raw = input.value.replace(/[\s.-]/g, "").toUpperCase();
+                if (pareceRut(input.value, raw)) {
+                    const body = raw.slice(0, -1);
+                    input.value = `${body.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}-${raw.slice(-1)}`;
+                }
+                input.setCustomValidity("");
+                if (!raw) {
+                    rutFeedback.textContent = "El RUT se valida con su dígito verificador; también puedes ingresar un pasaporte.";
+                    rutFeedback.dataset.state = "";
+                } else if (pareceRut(input.value, raw) && rutValido(input.value)) {
+                    rutFeedback.textContent = "RUT válido.";
+                    rutFeedback.dataset.state = "valid";
+                } else if (pareceRut(input.value, raw)) {
+                    rutFeedback.textContent = "RUT inválido: revisa el número y su dígito verificador.";
+                    rutFeedback.dataset.state = "invalid";
+                } else {
+                    rutFeedback.textContent = "Formato de documento no reconocido como RUT; puedes usar un pasaporte.";
+                    rutFeedback.dataset.state = "";
+                }
+            });
+        }
+
+        function updateSeatCount(event) {
+            const selected = checkboxes.filter((checkbox) => checkbox.checked);
+            if (selected.length > maxSeats && event?.target?.checked) {
+                event.target.checked = false;
+            }
+            count.textContent = String(checkboxes.filter((checkbox) => checkbox.checked).length);
+        }
+
+        checkboxes.forEach((checkbox) => checkbox.addEventListener("change", updateSeatCount));
+        if (purchaserDocument) {
+            attachRutValidation(purchaserDocument);
+            if (purchaserDocument.value) {
+                purchaserDocument.dispatchEvent(new Event("input"));
+            }
+        }
+        form?.addEventListener("submit", (event) => {
+            if (purchaserDocument && !rutValido(purchaserDocument.value)) {
+                purchaserDocument.setCustomValidity("El dígito verificador del RUT no es válido.");
+                purchaserDocument.reportValidity();
+                event.preventDefault();
+            }
+        });
+        updateSeatCount();
+    })();
+</script>
+{% endblock %}

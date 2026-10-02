@@ -1,0 +1,49 @@
+{% extends "web/base_portal.html" %}
+{% block title %}{{ etiqueta }}{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div><h1>{{ etiqueta }}</h1><p class="subtitle">{{ total_objetos }} registro{% if total_objetos != 1 %}s{% endif %}{% if busqueda %} para “{{ busqueda }}”{% endif %}.</p></div>
+    <div class="actions">
+        <a class="button button-secondary" href="{% url 'gestion-inicio' %}">Panel</a>
+        <a class="button" href="{% url 'gestion-nuevo' recurso %}">Nuevo registro</a>
+    </div>
+</div>
+<form method="get" class="panel" style="display:flex;gap:12px;align-items:end;margin-bottom:18px">
+    <div style="flex:1">
+        <label for="gestion-busqueda">Buscar {{ etiqueta|lower }}</label>
+        <input id="gestion-busqueda" name="q" type="search" value="{{ busqueda }}" placeholder="Nombre, ciudad, terminal o patente">
+    </div>
+    <button type="submit">Buscar</button>
+    {% if busqueda %}<a class="button button-secondary" href="{% url 'gestion-lista' recurso %}">Limpiar</a>{% endif %}
+</form>
+{% if objetos %}
+    <div class="panel table-wrap">
+        <table>
+            <thead><tr><th>Registro</th><th>Información</th><th>Acciones</th></tr></thead>
+            <tbody>
+                {% for objeto in objetos %}
+                    <tr>
+                        <td>#{{ objeto.pk }}</td>
+                        <td>
+                            <strong>{{ objeto }}</strong>
+                            {% if recurso == "servicios" %}
+                                <br><span class="muted">{{ objeto.asientos_disponibles }} disponibles · Semicama ${{ objeto.precio_base|floatformat:0 }} · Cama ${{ objeto.precio_cama|floatformat:0 }}</span>
+                                <br><span class="muted">Bus asignado: {{ objeto.bus.marca }} {{ objeto.bus.modelo }} · {{ objeto.bus.patente }} · {{ objeto.bus.capacidad }} asientos</span>
+                            {% endif %}
+                        </td>
+                        <td><div class="actions">
+                            <a href="{% url 'gestion-editar' recurso objeto.pk %}">Editar</a>
+                            {% if recurso == "servicios" %}
+                                <a href="{% url 'gestion-editar' recurso objeto.pk %}">Cambiar precios</a>
+                            {% endif %}
+                            <a style="color:#b42332" href="{% url 'gestion-eliminar' recurso objeto.pk %}">Eliminar</a>
+                        </div></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="empty">{% if busqueda %}No encontramos registros con esa búsqueda.{% else %}No hay registros. Crea el primero para comenzar.{% endif %}<br><br><a class="button" href="{% url 'gestion-nuevo' recurso %}">Agregar {{ etiqueta|lower }}</a></div>
+{% endif %}
+{% endblock %}
