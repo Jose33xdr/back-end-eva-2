@@ -4,7 +4,7 @@ URLs principales del proyecto BUS RESERVAS API.
 Define las rutas de la API, administración de Django y documentación Swagger.
 """
 
-from django.urls import path, include
+from django.urls import include, path, re_path
 from django.views.generic import RedirectView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 from rest_framework_simplejwt.views import (
@@ -12,6 +12,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView,
 )
+from . import web_views
 from ventas.views import MisBoletosView, MisOrdenesView
 
 urlpatterns = [
@@ -50,4 +51,11 @@ urlpatterns = [
     path('api/carrito/', include('carrito.urls')),
     path('api/carro-pasajes/', include('carrito.urls')),
     path('api/ventas/', include('ventas.urls')),
+
+    # Muestra una página 404 para rutas web sin ocultar errores de la API.
+    re_path(
+        r'^(?!api(?:/|$)).*$',
+        web_views.pagina_no_encontrada,
+        name='web-fallback',
+    ),
 ]

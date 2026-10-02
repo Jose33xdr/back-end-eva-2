@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página no encontrada | BusGo</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            margin: 0;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background: #f5f7fa;
+            color: #1d2a38;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+        }
+        main {
+            width: min(100%, 520px);
+            padding: 48px 32px;
+            border: 1px solid #e4eaf1;
+            border-radius: 20px;
+            background: #fff;
+            box-shadow: 0 12px 28px rgba(17, 33, 52, .08);
+            text-align: center;
+        }
+        .code { margin: 0; color: #2864c8; font-size: 5rem; font-weight: 800; line-height: 1; }
+        h1 { margin: 20px 0 8px; font-size: 1.7rem; }
+        p { margin: 0 0 28px; color: #66778c; }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 10px;
+            background: #2864c8;
+            color: #fff;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .button:hover { background: #1f50a2; }
+        .button:focus-visible { outline: 3px solid rgba(40, 100, 200, .35); outline-offset: 3px; }
+    </style>
+</head>
+<body>
+    <main>
+        <p class="code">404</p>
+        <h1>Página no encontrada</h1>
+        <p>La página que buscas no existe o fue movida.</p>
+        <a class="button" href="{% url 'home' %}" onclick="if (history.length > 1) { history.back(); return false; }">Volver</a>
+    </main>
+</body>
+</html>

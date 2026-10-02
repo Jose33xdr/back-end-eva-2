@@ -27,6 +27,10 @@ from ventas.services import (
 )
 
 
+def pagina_no_encontrada(request, exception=None):
+    return render(request, 'web/404.html', status=404)
+
+
 def home(request):
     servicios_activos = (
         Servicio.objects.select_related(

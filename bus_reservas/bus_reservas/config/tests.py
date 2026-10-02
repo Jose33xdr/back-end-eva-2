@@ -81,6 +81,13 @@ class BusReservationTemplateTests(TestCase):
         self.assertContains(results, 'TEST11')
         self.assertContains(results, '4 asientos')
 
+    def test_unknown_web_path_renders_not_found_page_and_unknown_api_remains_404(self):
+        not_found = self.client.get('/ded')
+        self.assertEqual(not_found.status_code, 404)
+        self.assertContains(not_found, 'Página no encontrada', status_code=404)
+        self.assertContains(not_found, '>Volver</a>', status_code=404)
+        self.assertEqual(self.client.get('/api/no-such-endpoint/').status_code, 404)
+
     def test_admin_uses_template_portal_and_passenger_cannot_access_it(self):
         denied = self.client.get(reverse('gestion-inicio'))
         self.assertEqual(denied.status_code, 302)
