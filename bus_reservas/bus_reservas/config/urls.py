@@ -5,6 +5,7 @@ Define las rutas de la API, administración de Django y documentación Swagger.
 """
 
 from django.urls import include, path, re_path
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.generic import RedirectView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 from rest_framework_simplejwt.views import (
@@ -30,6 +31,16 @@ urlpatterns = [
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    path(
+        'api/docs/embed/',
+        xframe_options_sameorigin(SpectacularSwaggerView.as_view(url_name='schema')),
+        name='swagger-embedded',
+    ),
+    path(
+        'api/redoc/embed/',
+        xframe_options_sameorigin(SpectacularRedocView.as_view(url_name='schema')),
+        name='redoc-embedded',
+    ),
     
     # Endpoints de autenticación JWT estándar (SimpleJWT)
     path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

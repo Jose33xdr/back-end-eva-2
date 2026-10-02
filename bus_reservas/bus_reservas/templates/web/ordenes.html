@@ -2,39 +2,129 @@
 {% block title %}Mis reservas{% endblock %}
 {% block content %}
 <style>
-    .purchase-page .panel { border-radius:14px; box-shadow:none; }
-    .order-list { display:grid; gap:10px; }
-    .order-card { display:grid; grid-template-columns:1fr auto auto; align-items:center; gap:20px; padding:17px 20px; }
-    .order-card h2 { font-size:1rem; margin:0 0 3px; }
-    .order-card p { margin:0; }
+    .purchase-page .panel { border-radius:16px; box-shadow:none; }
+    .order-list { display:grid; gap:18px; }
+    .order-card { padding:0; overflow:hidden; }
+    .order-head { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:20px 24px; border-bottom:1px solid var(--line); }
+    .order-title { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .order-title h2 { font-size:1.05rem; margin:0; }
+    .order-title p { margin:3px 0 0; }
+    .order-summary { display:flex; align-items:center; gap:18px; }
+    .order-total { font-size:1.08rem; font-weight:800; white-space:nowrap; }
+    .ticket-list { display:grid; gap:0; }
+    .ticket-card { padding:22px 24px; border-bottom:1px solid var(--line); }
+    .ticket-card:last-child { border-bottom:0; }
+    .route { display:grid; grid-template-columns:minmax(0, 1fr) 70px minmax(0, 1fr); align-items:center; gap:14px; }
+    .route-stop:last-child { text-align:right; }
+    .route-city { display:block; color:var(--navy); font-size:1.2rem; font-weight:800; }
+    .route-terminal { display:block; margin-top:3px; color:var(--muted); font-size:.88rem; }
+    .route-line { position:relative; height:1px; background:#cbd8e8; }
+    .route-line::after { content:""; position:absolute; top:-4px; right:0; width:9px; height:9px; border-top:2px solid #8ba4c4; border-right:2px solid #8ba4c4; transform:rotate(45deg); }
+    .ticket-details { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:14px; margin:20px 0 0; }
+    .ticket-detail dt { color:var(--muted); font-size:.77rem; font-weight:700; text-transform:uppercase; letter-spacing:.045em; }
+    .ticket-detail dd { margin:4px 0 0; color:var(--ink); font-size:.92rem; font-weight:650; overflow-wrap:anywhere; }
+    .ticket-passenger { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-top:18px; padding-top:15px; border-top:1px dashed var(--line); }
+    .ticket-actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+    .ticket-code { color:var(--muted); font-size:.83rem; }
+    .ticket-code code { color:var(--navy); font-weight:700; overflow-wrap:anywhere; }
+    .order-footer { display:flex; align-items:center; justify-content:flex-end; gap:14px; padding:16px 24px; background:#fafbfd; }
     .order-actions { display:flex; align-items:center; justify-content:flex-end; gap:12px; flex-wrap:wrap; }
-    .order-total { font-weight:750; white-space:nowrap; }
-    @media (max-width:650px) { .order-card { grid-template-columns:1fr auto; gap:12px; } .order-actions { grid-column:1 / -1; justify-content:flex-start; } }
+    .state-cancelado { background:#fff0f1; color:#a51d2d; }
+    .state-entregado { background:#eaf8f0; color:#146c43; }
+    @media (max-width:760px) { .ticket-details { grid-template-columns:repeat(2, minmax(0, 1fr)); } }
+    @media (max-width:560px) {
+        .order-head { align-items:flex-start; flex-direction:column; padding:18px; }
+        .order-summary { width:100%; justify-content:space-between; }
+        .ticket-card { padding:18px; }
+        .route { grid-template-columns:minmax(0, 1fr) 34px minmax(0, 1fr); gap:8px; }
+        .route-city { font-size:1.02rem; }
+        .route-terminal { font-size:.79rem; }
+        .ticket-passenger { align-items:flex-start; flex-direction:column; }
+        .order-footer { justify-content:flex-start; padding:14px 18px; }
+        .order-actions { justify-content:flex-start; }
+    }
 </style>
 <div class="purchase-page">
 <div class="page-head">
     <div><h1>Mis reservas</h1><p class="subtitle">Consulta el estado de tus compras y tus boletos emitidos.</p></div>
-    <a class="button" href="{% url 'buscar-viajes' %}">Buscar pasajes</a>
+    <a class="button" href="{% url 'buscar-viajes' %}">Comprar más pasajes</a>
 </div>
 {% if ordenes %}
     <div class="order-list">
         {% for orden in ordenes %}
             <article class="panel order-card">
-                <div>
-                    <h2>Compra #{{ orden.id }}</h2>
-                    <p class="muted">{{ orden.fecha|date:"d/m/Y · H:i" }} · {{ orden.items.count }} pasaje{% if orden.items.count != 1 %}s{% endif %}</p>
+                <header class="order-head">
+                    <div class="order-title">
+                        <div>
+                            <h2>Compra #{{ orden.id }}</h2>
+                            <p class="muted">{{ orden.fecha|date:"d/m/Y · H:i" }} · {{ orden.items.all|length }} pasaje{% if orden.items.all|length != 1 %}s{% endif %}</p>
+                        </div>
+                    </div>
+                    <div class="order-summary">
+                        <span class="badge state-{{ orden.estado|lower }}">{{ orden.get_estado_display }}</span>
+                        <span class="order-total">${{ orden.total|floatformat:0 }}</span>
+                    </div>
+                </header>
+                <div class="ticket-list">
+                    {% for item in orden.items.all %}
+                        <section class="ticket-card">
+                            <div class="route">
+                                <div class="route-stop">
+                                    <span class="route-city">{{ item.servicio.ruta.origen.ciudad.nombre }}</span>
+                                    <span class="route-terminal">{{ item.servicio.ruta.origen.nombre }}</span>
+                                </div>
+                                <span class="route-line" aria-hidden="true"></span>
+                                <div class="route-stop">
+                                    <span class="route-city">{{ item.servicio.ruta.destino.ciudad.nombre }}</span>
+                                    <span class="route-terminal">{{ item.servicio.ruta.destino.nombre }}</span>
+                                </div>
+                            </div>
+                            <dl class="ticket-details">
+                                <div class="ticket-detail">
+                                    <dt>Salida</dt>
+                                    <dd>{{ item.servicio.fecha_salida|date:"d/m/Y" }}</dd>
+                                </div>
+                                <div class="ticket-detail">
+                                    <dt>Hora</dt>
+                                    <dd>{{ item.servicio.hora_salida|time:"H:i" }}</dd>
+                                </div>
+                                <div class="ticket-detail">
+                                    <dt>Bus</dt>
+                                    <dd>{{ item.servicio.bus.marca }} {{ item.servicio.bus.modelo }} · {{ item.servicio.bus.patente }}</dd>
+                                </div>
+                                <div class="ticket-detail">
+                                    <dt>Asiento</dt>
+                                    <dd>{{ item.asiento.numero }} · {{ item.asiento.get_tipo_display }}</dd>
+                                </div>
+                            </dl>
+                            <div class="ticket-passenger">
+                                <div class="ticket-detail">
+                                    <dt>Pasajero</dt>
+                                    <dd>{{ item.nombre_pasajero|default:"No registrado" }}{% if item.documento_pasajero %} · {{ item.documento_pasajero }}{% endif %}</dd>
+                                </div>
+                                <div class="ticket-actions">
+                                    {% if orden.estado == "PAGADO" or orden.estado == "ENTREGADO" %}
+                                        <div class="ticket-code">Boleto: <code>{{ item.codigo_boleto }}</code></div>
+                                    {% elif orden.estado == "PENDIENTE" %}
+                                        <div class="ticket-code">El boleto se emitirá al confirmar el pago.</div>
+                                    {% endif %}
+                                    <a class="button button-secondary button-small" href="{% url 'reserva-ver-asientos' orden.id item.id %}">Ver mapa de asientos</a>
+                                </div>
+                            </div>
+                        </section>
+                    {% endfor %}
                 </div>
-                <span class="badge">{{ orden.get_estado_display }}</span>
-                <div class="order-total">${{ orden.total|floatformat:0 }}</div>
-                <div class="order-actions">
-                    <a href="{% url 'orden-detalle-web' orden.id %}">Ver compra</a>
-                    {% if orden.estado == "PAGADO" or orden.estado == "PENDIENTE" %}
-                        <form method="post" action="{% url 'mis-pasajes-cancelar-web' orden.id %}" onsubmit="return confirm('¿Cancelar esta compra y todos sus pasajes?');">
-                            {% csrf_token %}
-                            <button class="button-danger button-small" type="submit">Cancelar compra</button>
-                        </form>
-                    {% endif %}
-                </div>
+                <footer class="order-footer">
+                    <div class="order-actions">
+                        <a href="{% url 'orden-detalle-web' orden.id %}">Ver compra</a>
+                        {% if orden.estado == "PAGADO" or orden.estado == "PENDIENTE" %}
+                            <form method="post" action="{% url 'mis-pasajes-cancelar-web' orden.id %}" onsubmit="return confirm('¿Cancelar esta compra y todos sus pasajes?');">
+                                {% csrf_token %}
+                                <button class="button-danger button-small" type="submit">Cancelar compra</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </footer>
             </article>
         {% endfor %}
     </div>

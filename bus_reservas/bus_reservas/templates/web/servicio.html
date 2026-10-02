@@ -42,12 +42,50 @@
         <h1>{{ servicio.ruta.origen.ciudad.nombre }} → {{ servicio.ruta.destino.ciudad.nombre }}</h1>
         <p class="subtitle">{{ servicio.fecha_salida|date:"l d F Y" }} · Salida {{ servicio.hora_salida|time:"H:i" }}</p>
     </div>
-    <a class="button button-secondary" href="{% url 'buscar-viajes' %}">Volver a resultados</a>
+    {% if solo_lectura %}
+        <a class="button button-secondary" href="{% url 'mis-reservas-web' %}">Volver a mis reservas</a>
+    {% else %}
+        <a class="button button-secondary" href="{% url 'buscar-viajes' %}">Volver a resultados</a>
+    {% endif %}
 </div>
 <div class="purchase-page">
 <div class="grid">
     <section class="panel">
-        {% if request.user.is_authenticated and not request.user.is_admin %}
+        {% if solo_lectura %}
+            <h2>Mapa de asientos</h2>
+            <p class="muted">Consulta los asientos del bus. Este mapa no permite realizar compras.</p>
+            <div class="seat-legend" aria-label="Leyenda de asientos">
+                <span><i class="seat-dot"></i> Disponible</span>
+                <span><i class="seat-dot occupied"></i> Reservado</span>
+            </div>
+            <div class="bus-layout" aria-label="Plano de asientos del bus">
+                <div class="bus-front">Frente del bus · Conductor</div>
+                <div class="seat-rows">
+                {% for row in seat_rows %}
+                    <div class="seat-row" aria-label="Fila {{ forloop.counter }}">
+                    {% for slot in row %}
+                        {% with asiento=slot.asiento %}
+                            {% if asiento.ocupado %}
+                                <div class="seat-unavailable seat-slot-{{ slot.position }}" aria-label="Asiento {{ asiento.numero }}, reservado">
+                                    <strong>{{ asiento.numero }}</strong>
+                                    <small>Reservado</small>
+                                </div>
+                            {% else %}
+                                <div class="seat-tile seat-slot-{{ slot.position }}" aria-label="Asiento {{ asiento.numero }}, disponible">
+                                    <strong>{{ asiento.numero }}</strong>
+                                    <small>{{ asiento.get_tipo_display }} · ${{ asiento.precio|floatformat:0 }}</small>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                        {% if slot.position == 2 %}<div class="seat-aisle" aria-hidden="true"></div>{% endif %}
+                    {% endfor %}
+                    </div>
+                {% empty %}
+                    <p class="empty">Este servicio todavía no tiene asientos asignados.</p>
+                {% endfor %}
+                </div>
+            </div>
+        {% elif request.user.is_authenticated and not request.user.is_admin %}
             <form method="post">
                 {% csrf_token %}
                 <h2>1. Selecciona tus asientos</h2>
@@ -130,6 +168,7 @@
     </aside>
 </div>
 </div>
+{% if not solo_lectura %}
 <script>
     (() => {
         const form = document.querySelector(".panel form");
@@ -206,4 +245,5 @@
         updateSeatCount();
     })();
 </script>
+{% endif %}
 {% endblock %}

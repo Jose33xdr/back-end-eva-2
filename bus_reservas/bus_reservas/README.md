@@ -115,7 +115,7 @@ python manage.py runserver
 
 El servidor estará disponible en: **http://localhost:8000**
 
-La interfaz pública, pasajeros y administración está renderizada con templates de Django. Las URL web desconocidas muestran una página 404 con un botón para volver; las rutas API desconocidas conservan su respuesta 404. El panel de flota se encuentra en `/gestion/`; `/admin/` redirige a ese panel. El administrador puede crear, buscar, editar y eliminar ciudades, terminales, rutas, buses y viajes. Los datos se enlazan en los formularios: las ciudades creadas aparecen en terminales, los terminales en rutas, y las rutas y buses en los viajes. `config.settings_test` usa SQLite únicamente para pruebas automatizadas y vistas locales; la ejecución normal con `config.settings` requiere PostgreSQL, como exige la evaluación.
+La interfaz pública, pasajeros y administración está renderizada con templates de Django. Las URL web desconocidas muestran una página 404 con un botón para volver; las rutas API desconocidas conservan su respuesta 404. La barra superior ofrece accesos a Swagger Docs, ReDoc, OpenAPI y al panel administrador; las vistas de documentación incluyen navegación para volver. El panel de flota se encuentra en `/gestion/`; `/admin/` redirige a ese panel. El administrador puede crear, buscar, editar y eliminar ciudades, terminales, rutas, buses y viajes. Los datos se enlazan en los formularios: las ciudades creadas aparecen en terminales, los terminales en rutas, y las rutas y buses en los viajes. `config.settings_test` usa SQLite únicamente para pruebas automatizadas y vistas locales; la ejecución normal con `config.settings` requiere PostgreSQL, como exige la evaluación.
 
 Para ejecutar las pruebas automatizadas sin un servidor PostgreSQL instalado:
 
@@ -128,6 +128,9 @@ python manage.py test config.tests --settings=config.settings_test
 - **Swagger UI**: http://localhost:8000/api/docs/
 - **ReDoc**: http://localhost:8000/api/redoc/
 - **OpenAPI Schema**: http://localhost:8000/api/schema/
+- **Swagger Docs con navegación**: http://localhost:8000/documentacion/swagger/
+- **ReDoc con navegación**: http://localhost:8000/documentacion/redoc/
+- **OpenAPI con navegación**: http://localhost:8000/documentacion/openapi/
 - **Panel administrador con templates**: http://localhost:8000/gestion/
 - **Alias del panel**: http://localhost:8000/admin/
 

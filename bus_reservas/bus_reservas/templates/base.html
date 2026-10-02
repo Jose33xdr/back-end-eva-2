@@ -551,7 +551,16 @@
         @media (max-width: 640px) {
             .container { padding:0 18px; }
             .nav-links {
-                display: none;
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: flex-start;
+                gap: 8px 14px;
+            }
+            .nav-links a {
+                font-size: .82rem;
+            }
+            .nav-links .btn {
+                width: auto;
             }
 
             .search-grid,
@@ -599,7 +608,11 @@
                         <a href="#ofertas">Ofertas</a>
                         <a href="#beneficios">Beneficios</a>
                     {% endif %}
-                    <a href="{% url 'swagger-ui' %}">Documentación API</a>
+                    <a href="{% url 'swagger-web' %}">Swagger Docs</a>
+                    <a href="{% url 'redoc-web' %}">ReDoc</a>
+                    <a href="{% url 'gestion-inicio' %}">Panel administrador</a>
+                    <a href="{% url 'openapi-web' %}">OpenAPI</a>
+                    <button class="btn btn-secondary" type="button" data-go-back>Volver</button>
                 </div>
                 <div class="nav-actions">
                     {% if request.user.is_authenticated %}
@@ -790,10 +803,23 @@
 
             <nav class="footer-nav" aria-label="Navegación footer">
                 <a href="{% url 'gestion-inicio' %}">Panel administrador</a>
-                <a href="{% url 'swagger-ui' %}">Documentación API</a>
+                <a href="{% url 'swagger-web' %}">Swagger Docs</a>
+                <a href="{% url 'redoc-web' %}">ReDoc</a>
+                <a href="{% url 'openapi-web' %}">OpenAPI</a>
             </nav>
         </div>
     </footer>
 
+    <script>
+        document.querySelectorAll('[data-go-back]').forEach((button) => {
+            button.addEventListener('click', () => {
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.location.href = "{% url 'home' %}";
+                }
+            });
+        });
+    </script>
 </body>
 </html>

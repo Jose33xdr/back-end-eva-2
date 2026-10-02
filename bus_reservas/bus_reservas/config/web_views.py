@@ -12,6 +12,7 @@ from django.db.models.deletion import ProtectedError
 from django.forms import modelform_factory
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.timezone import localdate
 
@@ -29,6 +30,20 @@ from ventas.services import (
 
 def pagina_no_encontrada(request, exception=None):
     return render(request, 'web/404.html', status=404)
+
+
+def documentacion_web(request, documento):
+    documento_urls = {
+        'swagger': ('swagger-embedded', 'Swagger Docs'),
+        'redoc': ('redoc-embedded', 'ReDoc'),
+        'openapi': ('schema', 'OpenAPI'),
+    }
+    url_name, titulo = documento_urls[documento]
+    return render(request, 'web/documentacion.html', {
+        'documento_url': reverse(url_name),
+        'documento_titulo': titulo,
+        'mostrar_esquema': documento == 'openapi',
+    })
 
 
 def home(request):
@@ -163,6 +178,10 @@ def admin_requerido(view):
 
 
 def detalle_servicio(request, servicio_id):
+    solo_lectura = request.GET.get('solo_lectura') == '1'
+    if request.method == 'POST' and solo_lectura:
+        return HttpResponseForbidden('Este mapa de asientos es solo para consulta.')
+
     servicio = get_object_or_404(
         Servicio.objects.select_related(
             'ruta__origen__ciudad', 'ruta__destino__ciudad', 'bus'
@@ -264,6 +283,7 @@ def detalle_servicio(request, servicio_id):
         'nombre_comprador': request.POST.get('nombre_comprador', ''),
         'documento_comprador': request.POST.get('documento_pasajero', ''),
         'limite_compra': limite_compra,
+        'solo_lectura': solo_lectura,
     })
 
 
@@ -348,8 +368,29 @@ def confirmar_compra(request):
 
 @pasajero_requerido
 def mis_reservas(request):
-    ordenes = Orden.objects.filter(usuario=request.user).order_by('-fecha')
+    ordenes = (
+        Orden.objects.filter(usuario=request.user)
+        .prefetch_related(
+            'items__servicio__ruta__origen__ciudad',
+            'items__servicio__ruta__destino__ciudad',
+            'items__servicio__bus',
+            'items__asiento',
+        )
+        .order_by('-fecha')
+    )
     return render(request, 'web/ordenes.html', {'ordenes': ordenes})
+
+
+@pasajero_requerido
+def ver_asientos_reserva(request, orden_id, item_id):
+    item = get_object_or_404(
+        ItemOrden.objects.select_related('servicio'),
+        pk=item_id,
+        orden_id=orden_id,
+        orden__usuario=request.user,
+    )
+    service_url = reverse('detalle-servicio', args=[item.servicio_id])
+    return redirect(f'{service_url}?solo_lectura=1')
 
 
 @pasajero_requerido

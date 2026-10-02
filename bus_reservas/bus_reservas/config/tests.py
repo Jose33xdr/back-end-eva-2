@@ -103,6 +103,52 @@ class BusReservationTemplateTests(TestCase):
         self.assertContains(dashboard, 'Agregar')
         self.assertEqual(self.client.get('/admin/').status_code, 302)
 
+    def test_passenger_reservations_show_trip_and_ticket_details(self):
+        orden = Orden.objects.create(
+            usuario=self.pasajero,
+            total=30000,
+            estado=Orden.Estado.PAGADO,
+        )
+        orden.items.create(
+            servicio=self.servicio,
+            asiento=self.asiento_cama,
+            precio_unitario=30000,
+            nombre_pasajero='Camila Prueba',
+            documento_pasajero='11.111.111-1',
+        )
+        self.client.force_login(self.pasajero)
+
+        response = self.client.get(reverse('mis-reservas-web'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Santiago')
+        self.assertContains(response, 'Temuco')
+        self.assertContains(response, 'Terminal Central')
+        self.assertContains(response, 'Terminal Sur')
+        self.assertContains(response, '09:00')
+        self.assertContains(response, 'Volvo Prueba')
+        self.assertContains(response, 'TEST11')
+        self.assertContains(response, 'Asiento')
+        self.assertContains(response, 'Camila Prueba')
+        self.assertContains(response, '11.111.111-1')
+        item = orden.items.get()
+        self.assertContains(response, reverse(
+            'reserva-ver-asientos', args=[orden.pk, item.pk]
+        ))
+
+        item.asiento.ocupado = True
+        item.asiento.save(update_fields=['ocupado'])
+        seat_map = self.client.get(
+            reverse('reserva-ver-asientos', args=[orden.pk, item.pk]),
+            follow=True,
+        )
+        self.assertEqual(seat_map.status_code, 200)
+        self.assertContains(seat_map, 'Mapa de asientos')
+        self.assertContains(seat_map, 'Asiento 1, reservado')
+        self.assertContains(seat_map, 'no permite realizar compras')
+        self.assertNotContains(seat_map, 'name="asientos_ids"')
+        self.assertContains(seat_map, 'Volver a mis reservas')
+
     def test_admin_can_create_fleet_records_with_template_form(self):
         self.client.force_login(self.administrador)
         form = self.client.get(reverse('gestion-nuevo', args=['ciudades']))
@@ -319,8 +365,16 @@ class BusReservationTemplateTests(TestCase):
         )
 
     def test_passenger_can_register_and_log_in_through_templates(self):
+        login_page = self.client.get(reverse('login-web'))
+        self.assertContains(login_page, 'type="password"')
+        self.assertContains(login_page, 'password-toggle')
+        self.assertContains(login_page, "input.type = mostrar ? 'text' : 'password';")
+
         register = self.client.get(reverse('registro-web'))
         self.assertEqual(register.status_code, 200)
+        self.assertContains(register, 'name="password1"')
+        self.assertContains(register, 'name="password2"')
+        self.assertContains(register, 'password-toggle')
         response = self.client.post(reverse('registro-web'), {
             'username': 'nueva_viajera',
             'first_name': 'Nueva',
@@ -560,6 +614,35 @@ class BusReservationTemplateTests(TestCase):
 
         docs = self.client.get('/api/docs/')
         self.assertEqual(docs.status_code, 200)
+        swagger_page = self.client.get(reverse('swagger-web'))
+        self.assertEqual(swagger_page.status_code, 200)
+        self.assertContains(swagger_page, 'Swagger Docs')
+        self.assertContains(swagger_page, 'Panel administrador')
+        self.assertContains(swagger_page, 'Volver')
+        self.assertContains(swagger_page, f'src="{reverse("swagger-embedded")}"')
+        embedded_swagger = self.client.get(reverse('swagger-embedded'))
+        self.assertEqual(
+            embedded_swagger.headers['X-Frame-Options'],
+            'SAMEORIGIN',
+        )
+        redoc = self.client.get('/api/redoc/')
+        self.assertEqual(redoc.status_code, 200)
+        redoc_page = self.client.get(reverse('redoc-web'))
+        self.assertEqual(redoc_page.status_code, 200)
+        self.assertContains(redoc_page, 'ReDoc')
+        self.assertContains(redoc_page, 'Volver')
+        self.assertContains(redoc_page, f'src="{reverse("redoc-embedded")}"')
+        embedded_redoc = self.client.get(reverse('redoc-embedded'))
+        self.assertEqual(
+            embedded_redoc.headers['X-Frame-Options'],
+            'SAMEORIGIN',
+        )
+        openapi_page = self.client.get(reverse('openapi-web'))
+        self.assertEqual(openapi_page.status_code, 200)
+        self.assertContains(openapi_page, 'OpenAPI')
+        self.assertContains(openapi_page, 'Volver')
+        self.assertContains(openapi_page, 'data-openapi-schema')
+        self.assertContains(openapi_page, f'{reverse("schema")}?format=json')
         schema = self.client.get('/api/schema/')
         self.assertEqual(schema.status_code, 200)
 

@@ -61,7 +61,7 @@
         }
         .brand:hover { color:white; }
         .brand-mark { margin-right: 9px; color: var(--orange); }
-        .nav { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+        .nav { display: flex; align-items: center; justify-content: flex-end; gap: 7px; flex-wrap: wrap; }
         .nav a {
             color: #e5edf9;
             font-size: .92rem;
@@ -114,6 +114,10 @@
         .button-secondary:hover { background:#e2ebf6; color:var(--navy); box-shadow:none; }
         .button-danger { background:linear-gradient(135deg,#c73b4a,#a91f32); }
         .button-small { padding:9px 13px; font-size:.88rem; }
+        .password-control { display:flex; align-items:stretch; gap:8px; }
+        .password-control input { flex:1; min-width:0; }
+        .password-toggle { flex:0 0 auto; padding:8px 13px; background:#edf3fa; color:var(--navy); box-shadow:none; }
+        .password-toggle:hover { background:#e2ebf6; color:var(--navy); box-shadow:none; }
         .actions { display:flex; gap:11px; align-items:center; flex-wrap:wrap; }
         .actions form { display:inline; margin:0; }
         label { display:block; color:#263a56; font-weight:700; margin:15px 0 7px; font-size:.93rem; }
@@ -192,6 +196,11 @@
                     <a href="{% url 'login-web' %}">Iniciar sesión</a>
                     <a class="button button-small" href="{% url 'registro-web' %}">Crear cuenta</a>
                 {% endif %}
+                <a href="{% url 'swagger-web' %}">Swagger Docs</a>
+                <a href="{% url 'redoc-web' %}">ReDoc</a>
+                <a href="{% url 'gestion-inicio' %}">Panel administrador</a>
+                <a href="{% url 'openapi-web' %}">OpenAPI</a>
+                <button class="button-secondary button-small" type="button" data-go-back>Volver</button>
             </nav>
         </div>
     </header>
@@ -205,5 +214,41 @@
         {% endif %}
         {% block content %}{% endblock %}
     </main>
+    <script>
+        document.querySelectorAll('[data-go-back]').forEach((button) => {
+            button.addEventListener('click', () => {
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.location.href = "{% url 'home' %}";
+                }
+            });
+        });
+
+        document.querySelectorAll('input[type="password"]').forEach((input) => {
+            const control = document.createElement('div');
+            control.className = 'password-control';
+            input.parentNode.insertBefore(control, input);
+            control.append(input);
+
+            const toggle = document.createElement('button');
+            toggle.className = 'password-toggle';
+            toggle.type = 'button';
+            toggle.textContent = 'Mostrar';
+            toggle.setAttribute('aria-pressed', 'false');
+            toggle.setAttribute('aria-label', 'Mostrar contraseña');
+            toggle.addEventListener('click', () => {
+                const mostrar = input.type === 'password';
+                input.type = mostrar ? 'text' : 'password';
+                toggle.textContent = mostrar ? 'Ocultar' : 'Mostrar';
+                toggle.setAttribute('aria-pressed', String(mostrar));
+                toggle.setAttribute(
+                    'aria-label',
+                    `${mostrar ? 'Ocultar' : 'Mostrar'} contraseña`
+                );
+            });
+            control.append(toggle);
+        });
+    </script>
 </body>
 </html>

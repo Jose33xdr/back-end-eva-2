@@ -15,6 +15,29 @@ urlpatterns = [
     path('carro/confirmar/', web_views.confirmar_compra, name='carro-confirmar-web'),
     path('mis-reservas/', web_views.mis_reservas, name='mis-reservas-web'),
     path(
+        'documentacion/swagger/',
+        web_views.documentacion_web,
+        {'documento': 'swagger'},
+        name='swagger-web',
+    ),
+    path(
+        'documentacion/redoc/',
+        web_views.documentacion_web,
+        {'documento': 'redoc'},
+        name='redoc-web',
+    ),
+    path(
+        'documentacion/openapi/',
+        web_views.documentacion_web,
+        {'documento': 'openapi'},
+        name='openapi-web',
+    ),
+    path(
+        'mis-reservas/<int:orden_id>/pasajes/<int:item_id>/asientos/',
+        web_views.ver_asientos_reserva,
+        name='reserva-ver-asientos',
+    ),
+    path(
         'mis-reservas/<int:orden_id>/cancelar/',
         web_views.cancelar_mis_pasajes,
         name='mis-pasajes-cancelar-web',
