@@ -1,8 +1,9 @@
+"""Validaciones reutilizables para documentos de pasajeros y RUT chileno."""
 import re
 
 
 def documento_pasajero_valido(documento):
-    """Accept valid Chilean RUTs and non-RUT passport identifiers."""
+    """Acepta RUT chilenos v?lidos y documentos de pasaporte alternativos."""
     normalized = re.sub(r'[\s.-]', '', documento).upper()
     looks_like_rut = (
         re.fullmatch(r'\d{1,8}[0-9K]', normalized) is not None

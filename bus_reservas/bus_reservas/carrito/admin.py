@@ -9,6 +9,7 @@ from .models import Carro, ItemCarro
 
 
 class ItemCarroInline(admin.TabularInline):
+    """Muestra los items asociados a cada carrito activo."""
     model = ItemCarro
     extra = 0
     readonly_fields = ['asiento', 'cantidad', 'fecha_agregado']
@@ -17,6 +18,7 @@ class ItemCarroInline(admin.TabularInline):
 
 @admin.register(Carro)
 class CarroAdmin(admin.ModelAdmin):
+    """Administra el carrito persistente de cada pasajero."""
     list_display = ['usuario', 'activo', 'fecha_creacion', 'total_items', 'total_precio']
     list_filter = ['activo', 'fecha_creacion']
     search_fields = ['usuario__username', 'usuario__email']
@@ -34,6 +36,7 @@ class CarroAdmin(admin.ModelAdmin):
 
 @admin.register(ItemCarro)
 class ItemCarroAdmin(admin.ModelAdmin):
+    """Administra los asientos reservados en el carrito."""
     list_display = ['carro', 'asiento', 'cantidad', 'fecha_agregado']
     list_filter = ['fecha_agregado']
     search_fields = ['carro__usuario__username', 'asiento__servicio__ruta__origen__ciudad__nombre']

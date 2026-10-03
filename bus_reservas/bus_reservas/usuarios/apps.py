@@ -6,6 +6,7 @@ from django.apps import AppConfig
 
 
 class UsuariosConfig(AppConfig):
+    """Configura la aplicaci?n de usuarios y registro de se?ales de inicializaci?n."""
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'usuarios'
     verbose_name = 'Gestión de Usuarios'

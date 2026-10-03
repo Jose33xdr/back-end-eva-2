@@ -1,3 +1,4 @@
+"""Rutas del sitio web renderizado: b?squeda, autenticaci?n y gesti?n administrativa."""
 from django.urls import path
 
 from . import web_views

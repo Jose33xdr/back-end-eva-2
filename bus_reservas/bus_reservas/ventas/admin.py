@@ -9,6 +9,7 @@ from .models import Orden, ItemOrden
 
 
 class ItemOrdenInline(admin.TabularInline):
+    """Muestra los items ya asociados a una orden."""
     model = ItemOrden
     extra = 0
     readonly_fields = ['servicio', 'asiento', 'precio_unitario']
@@ -17,6 +18,7 @@ class ItemOrdenInline(admin.TabularInline):
 
 @admin.register(Orden)
 class OrdenAdmin(admin.ModelAdmin):
+    """Administra el ciclo de vida de las ?rdenes de compra."""
     list_display = ['id', 'usuario', 'fecha', 'total', 'estado', 'cantidad_items']
     list_filter = ['estado', 'fecha', 'usuario']
     search_fields = ['usuario__username', 'usuario__email', 'id']
@@ -31,6 +33,7 @@ class OrdenAdmin(admin.ModelAdmin):
 
 @admin.register(ItemOrden)
 class ItemOrdenAdmin(admin.ModelAdmin):
+    """Administra cada boleto generado dentro de una orden."""
     list_display = ['orden', 'servicio', 'asiento', 'precio_unitario']
     list_filter = ['orden__estado', 'servicio__fecha_salida']
     search_fields = ['orden__id', 'servicio__ruta__origen__ciudad__nombre', 'servicio__ruta__destino__ciudad__nombre']

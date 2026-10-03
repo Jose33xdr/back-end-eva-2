@@ -1,3 +1,4 @@
+"""Context processors del portal web para exponer metadatos institucionales."""
 import os
 from datetime import date
 

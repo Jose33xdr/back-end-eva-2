@@ -29,10 +29,12 @@ from ventas.services import (
 
 
 def pagina_no_encontrada(request, exception=None):
+    """Muestra la pagina 404 del portal web cuando la ruta no existe."""
     return render(request, 'web/404.html', status=404)
 
 
 def documentacion_web(request, documento):
+    """Carga la documentacion embebida de Swagger, Redoc o OpenAPI."""
     documento_urls = {
         'swagger': ('swagger-embedded', 'Swagger Docs'),
         'redoc': ('redoc-embedded', 'ReDoc'),
@@ -47,6 +49,7 @@ def documentacion_web(request, documento):
 
 
 def home(request):
+    """Presenta la portada con viajes activos y datos resumidos del catalogo."""
     servicios_activos = (
         Servicio.objects.select_related(
             'ruta__origen__ciudad', 'ruta__destino__ciudad', 'bus'
@@ -72,6 +75,7 @@ def home(request):
 
 
 def buscar_viajes(request):
+    """Busca servicios disponibles segun origen, destino, fecha y cantidad de pasajeros."""
     servicios = (
         Servicio.objects.select_related(
             'ruta__origen__ciudad', 'ruta__destino__ciudad', 'bus'
@@ -119,6 +123,7 @@ def buscar_viajes(request):
 
 
 def iniciar_sesion(request):
+    """Autentica a un usuario y redirige segun su rol y la URL de retorno."""
     if request.user.is_authenticated:
         return redirect('home')
     next_url = request.POST.get('next') or request.GET.get('next', '')
@@ -140,6 +145,7 @@ def iniciar_sesion(request):
 
 
 def registro(request):
+    """Registra un nuevo pasajero desde el portal web y lo conecta al sistema."""
     if request.user.is_authenticated:
         return redirect('home')
     form = RegistroUsuarioForm(request.POST or None)
@@ -153,6 +159,7 @@ def registro(request):
 
 @login_required
 def cerrar_sesion(request):
+    """Cierra la sesion del usuario con una validacion explicita via POST."""
     if request.method != 'POST':
         return HttpResponseForbidden('El cierre de sesión debe enviarse mediante POST.')
     logout(request)
@@ -160,6 +167,7 @@ def cerrar_sesion(request):
 
 
 def pasajero_requerido(view):
+    """Envuelve una vista y exige que el usuario tenga rol de pasajero."""
     @login_required
     def wrapped(request, *args, **kwargs):
         if not request.user.is_pasajero():
@@ -169,6 +177,7 @@ def pasajero_requerido(view):
 
 
 def admin_requerido(view):
+    """Envuelve una vista y exige permisos de administrador del portal."""
     @login_required
     def wrapped(request, *args, **kwargs):
         if not request.user.is_admin():
@@ -178,6 +187,7 @@ def admin_requerido(view):
 
 
 def detalle_servicio(request, servicio_id):
+    """Muestra el detalle del servicio y el mapa de asientos con validaciones de compra."""
     solo_lectura = request.GET.get('solo_lectura') == '1'
     if request.method == 'POST' and solo_lectura:
         return HttpResponseForbidden('Este mapa de asientos es solo para consulta.')
@@ -289,6 +299,7 @@ def detalle_servicio(request, servicio_id):
 
 @pasajero_requerido
 def carro(request):
+    """Muestra el carrito activo del pasajero para revisar y confirmar su compra."""
     carro_obj, _ = Carro.objects.get_or_create(usuario=request.user, activo=True)
     items = carro_obj.items.select_related(
         'asiento__servicio__ruta__origen__ciudad',
@@ -302,6 +313,7 @@ def carro(request):
 
 @pasajero_requerido
 def quitar_item_carro(request, item_id):
+    """Elimina un asiento del carrito y vuelve al resumen del carro."""
     if request.method != 'POST':
         return HttpResponseForbidden('La eliminación debe enviarse mediante POST.')
     item = get_object_or_404(ItemCarro, pk=item_id, carro__usuario=request.user)
@@ -312,6 +324,7 @@ def quitar_item_carro(request, item_id):
 
 @pasajero_requerido
 def confirmar_compra(request):
+    """Confirma la compra y convierte el carrito en una orden pagada."""
     if request.method != 'POST':
         return HttpResponseForbidden('La confirmación debe enviarse mediante POST.')
     carro_obj = get_object_or_404(Carro, usuario=request.user, activo=True)
@@ -368,6 +381,7 @@ def confirmar_compra(request):
 
 @pasajero_requerido
 def mis_reservas(request):
+    """Lista las compras del usuario autenticado con detalle de pasajes."""
     ordenes = (
         Orden.objects.filter(usuario=request.user)
         .prefetch_related(
@@ -383,6 +397,7 @@ def mis_reservas(request):
 
 @pasajero_requerido
 def ver_asientos_reserva(request, orden_id, item_id):
+    """Redirige a la vista del servicio en modo solo lectura para revisar un boleto."""
     item = get_object_or_404(
         ItemOrden.objects.select_related('servicio'),
         pk=item_id,
@@ -395,6 +410,7 @@ def ver_asientos_reserva(request, orden_id, item_id):
 
 @pasajero_requerido
 def cancelar_mis_pasajes(request, orden_id):
+    """Cancela una orden del usuario autenticado y libera los asientos asociados."""
     if request.method != 'POST':
         return HttpResponseForbidden('La cancelación debe enviarse mediante POST.')
     orden = get_object_or_404(Orden, pk=orden_id, usuario=request.user)
@@ -413,6 +429,7 @@ def cancelar_mis_pasajes(request, orden_id):
 
 @login_required
 def detalle_orden(request, orden_id):
+    """Muestra el detalle completo de una orden y sus asientos comprados."""
     orden = get_object_or_404(
         Orden.objects.prefetch_related('items__servicio', 'items__asiento'),
         pk=orden_id,
@@ -534,6 +551,7 @@ class ServicioForm(forms.ModelForm):
 
 
 def resource_or_404(key):
+    """Resuelve un recurso de gestion o lanza una 404 si la seccion no existe."""
     if key not in RESOURCES:
         from django.http import Http404
         raise Http404('La sección solicitada no existe.')
@@ -542,6 +560,7 @@ def resource_or_404(key):
 
 @admin_requerido
 def gestion_inicio(request):
+    """Presenta el panel de administracion con metricas de la operacion del sistema."""
     recursos = [
         ('ciudades', 'Ciudades', Ciudad.objects.count(), 'Orígenes y destinos'),
         ('terminales', 'Terminales', Terminal.objects.count(), 'Puntos de embarque'),
@@ -558,6 +577,7 @@ def gestion_inicio(request):
 
 @admin_requerido
 def gestion_lista(request, recurso):
+    """Lista registros de administracion segun el recurso solicitado."""
     config = resource_or_404(recurso)
     queryset = config['model'].objects.all()
     if recurso == 'servicios':
@@ -589,6 +609,7 @@ def gestion_lista(request, recurso):
 
 @admin_requerido
 def gestion_formulario(request, recurso, objeto_id=None):
+    """Crea o edita un registro del panel de gestion de la operacion."""
     config = resource_or_404(recurso)
     instance = get_object_or_404(config['model'], pk=objeto_id) if objeto_id else None
     if recurso == 'buses':
@@ -630,6 +651,7 @@ def gestion_formulario(request, recurso, objeto_id=None):
 
 @admin_requerido
 def gestion_eliminar(request, recurso, objeto_id):
+    """Elimina un registro del catalogo y protege operaciones con boletos asociados."""
     config = resource_or_404(recurso)
     objeto = get_object_or_404(config['model'], pk=objeto_id)
     if request.method == 'POST':
@@ -652,6 +674,7 @@ def gestion_eliminar(request, recurso, objeto_id):
 
 @admin_requerido
 def gestion_ordenes(request):
+    """Lista las ordenes del negocio con su estado y metadatos de usuario."""
     ordenes = Orden.objects.select_related('usuario').prefetch_related(
         'items'
     ).order_by('-fecha')
@@ -660,6 +683,7 @@ def gestion_ordenes(request):
 
 @admin_requerido
 def gestion_cambiar_estado(request, orden_id):
+    """Actualiza el estado de una orden desde el panel administrativo."""
     if request.method != 'POST':
         return HttpResponseForbidden('El cambio de estado debe enviarse mediante POST.')
     estado = request.POST.get('estado', '')

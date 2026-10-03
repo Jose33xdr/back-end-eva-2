@@ -10,6 +10,7 @@ from .models import Ciudad, Terminal, Ruta, Bus, Servicio, Asiento
 
 @admin.register(Ciudad)
 class CiudadAdmin(admin.ModelAdmin):
+    """Administra las ciudades visibles en la API y el portal web."""
     list_display = ['nombre']
     search_fields = ['nombre']
     ordering = ['nombre']
@@ -17,6 +18,7 @@ class CiudadAdmin(admin.ModelAdmin):
 
 @admin.register(Terminal)
 class TerminalAdmin(admin.ModelAdmin):
+    """Administra terminales y su relaci?n con cada ciudad."""
     list_display = ['nombre', 'ciudad']
     list_filter = ['ciudad']
     search_fields = ['nombre', 'ciudad__nombre']
@@ -25,6 +27,7 @@ class TerminalAdmin(admin.ModelAdmin):
 
 @admin.register(Ruta)
 class RutaAdmin(admin.ModelAdmin):
+    """Administra rutas y conexiones entre terminales."""
     list_display = ['origen', 'destino', 'distancia_km']
     list_filter = ['origen__ciudad', 'destino__ciudad']
     search_fields = ['origen__nombre', 'destino__nombre', 'origen__ciudad__nombre', 'destino__ciudad__nombre']
@@ -33,12 +36,14 @@ class RutaAdmin(admin.ModelAdmin):
 
 @admin.register(Bus)
 class BusAdmin(admin.ModelAdmin):
+    """Administra los buses y su capacidad f?sica."""
     list_display = ['patente', 'marca', 'modelo', 'capacidad']
     search_fields = ['patente', 'marca', 'modelo']
     ordering = ['patente']
 
 
 class AsientoInline(admin.TabularInline):
+    """Muestra los asientos ya generados para cada servicio."""
     model = Asiento
     extra = 0
     readonly_fields = ['numero', 'ocupado']
@@ -48,6 +53,7 @@ class AsientoInline(admin.TabularInline):
 
 @admin.register(Servicio)
 class ServicioAdmin(admin.ModelAdmin):
+    """Administra viajes y la asignaci?n autom?tica de asientos."""
     list_display = ['ruta', 'bus', 'fecha_salida', 'hora_salida', 'precio_base', 'asientos_disponibles']
     list_filter = ['fecha_salida', 'ruta__origen__ciudad', 'ruta__destino__ciudad', 'bus']
     search_fields = ['ruta__origen__ciudad__nombre', 'ruta__destino__ciudad__nombre', 'bus__patente']
@@ -61,6 +67,7 @@ class ServicioAdmin(admin.ModelAdmin):
 
 @admin.register(Asiento)
 class AsientoAdmin(admin.ModelAdmin):
+    """Consulta y ajuste del estado de cada asiento por servicio."""
     list_display = ['servicio', 'numero', 'ocupado']
     list_filter = ['ocupado', 'servicio__fecha_salida']
     search_fields = ['servicio__ruta__origen__ciudad__nombre', 'servicio__ruta__destino__ciudad__nombre']

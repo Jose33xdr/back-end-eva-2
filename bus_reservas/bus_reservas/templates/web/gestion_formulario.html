@@ -1,4 +1,5 @@
 {% extends "web/base_portal.html" %}
+{% comment %}Formulario reutilizable para crear o editar recursos administrables.{% endcomment %}
 {% block title %}{% if objeto %}Editar{% else %}Crear{% endif %} {{ etiqueta|lower }}{% endblock %}
 {% block content %}
 <div style="max-width:760px;margin:0 auto">
